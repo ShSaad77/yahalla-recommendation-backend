@@ -101,7 +101,10 @@ def get_user_profile(user_id):
     if len(user_row) == 0:
         return None
 
-    has_preferences = len(pref_row) > 0
+    # has_preferences = len(pref_row) > 0
+    has_preferences = False 
+    print("HAS PREF:", has_preferences)
+    # تعديل لحالة انتراكشنز بس و ماعتده بريفنسس
     has_history = len(interactions[interactions["user_id"].astype(int) == user_id]) > 0
 
     profile = {
