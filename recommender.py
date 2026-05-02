@@ -595,8 +595,16 @@ def recommend_interactions_only(profile):
     return recs.sort_values("final_score", ascending=False)
 def clean_records(df):
     df = df.copy()
-    df = df.replace({float("inf"): None, float("-inf"): None})
-    df = df.where(pd.notnull(df), None)
+
+    # 🔥 عالج inf
+    df = df.replace([float("inf"), float("-inf")], None)
+
+    # 🔥 عالج NaN
+    df = df.fillna(0)
+
+    # 🔥 تأكد ما فيه NaN نهائي
+    df = df.astype(object).where(pd.notnull(df), None)
+
     return df.to_dict(orient="records")
 
 def is_service_in_vocab(service_id):
