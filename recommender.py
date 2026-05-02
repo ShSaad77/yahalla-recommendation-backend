@@ -546,8 +546,12 @@ def recommend_interactions_only(profile):
     user_id = profile["user_id"]
 
     if is_user_in_vocab(user_id):
-        # 🟢 الحالة الطبيعية
+        # 🟢 الحالة الطبيعية (مع المودل)
         recs = score_services(user_id, services)
+
+        # ✅ نحسب المسافة بعد ما ننشئ recs
+        recs = add_distance(user_id, recs)
+
         recs = merge_popularity(recs)
         recs = normalize_features(recs)
 
@@ -558,7 +562,7 @@ def recommend_interactions_only(profile):
         )
 
     else:
-        # 🔴 user جديد → استخدم interactions فقط
+        # 🔴 user جديد (بدون مودل)
         user_interactions = interactions[
             interactions["user_id"].astype(int) == int(user_id)
         ]
@@ -569,15 +573,16 @@ def recommend_interactions_only(profile):
             services["service_id"].astype(str).isin(service_ids)
         ]
 
-        cuisines = user_services["cuisine_type"].dropna().unique()
+        # 👇 أهم خطوة: نجيب categories من الانتراكشنز
+        categories = user_services["service_category"].dropna().unique()
 
-        recs = services[
-          (services["service_category"].isin(categories)) |
-          (services["cuisine_type"].isin(cuisines))
-].copy()
+        # 👇 نفلتر الخدمات بناءً على نفس الكاتيغوري
         recs = services[
             services["service_category"].isin(categories)
         ].copy()
+
+        # ✅ برضو نحسب المسافة هنا
+        recs = add_distance(user_id, recs)
 
         recs = merge_popularity(recs)
         recs = normalize_features(recs)
@@ -588,7 +593,6 @@ def recommend_interactions_only(profile):
         )
 
     return recs.sort_values("final_score", ascending=False)
-
 def clean_records(df):
     df = df.copy()
     df = df.replace({float("inf"): None, float("-inf"): None})
